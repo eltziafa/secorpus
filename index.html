@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>secorpus · Greek Stock Exchange Corpus</title>
+<style>
+:root{
+  --bg:#f7f6f2; --panel:#ffffff; --ink:#1c2530; --muted:#5c6672;
+  --line:#d9d5cb; --accent:#155e63; --accent-ink:#ffffff;
+  --bronze:#8a6d3b; --hit:#fdf3d8; --focus:#155e63;
+  --radius:6px;
+}
+[data-theme="dark"]{
+  --bg:#141a20; --panel:#1c242c; --ink:#e8e6df; --muted:#98a2ad;
+  --line:#2e3944; --accent:#5fb3b8; --accent-ink:#10171d;
+  --bronze:#c9a25e; --hit:#3a3420;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+a{color:var(--accent)}
+header{
+  border-bottom:2px solid var(--ink);
+  padding:18px 22px 12px; display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;
+}
+.wordmark{font:700 26px/1 Georgia,"Times New Roman",serif; letter-spacing:.5px;cursor:pointer}
+.wordmark:hover span{color:var(--accent)}
+.wordmark span{color:var(--bronze)}
+.subtitle{color:var(--muted); font-size:13px}
+.spacer{flex:1}
+.iconbtn{
+  background:none;border:1px solid var(--line);border-radius:var(--radius);
+  color:var(--ink);padding:4px 10px;cursor:pointer;font-size:13px;
+}
+.iconbtn:hover{border-color:var(--accent)}
+nav.tabs{display:flex;gap:2px;padding:0 22px;border-bottom:1px solid var(--line)}
+nav.tabs button{
+  background:none;border:none;border-bottom:3px solid transparent;
+  padding:10px 14px;cursor:pointer;color:var(--muted);
+  font:inherit;font-size:14px;letter-spacing:.06em;text-transform:uppercase;
+}
+nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--bronze)}
+main{max-width:1100px;margin:0 auto;padding:20px 22px 60px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+input[type=text],select{
+  background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);
+  color:var(--ink);padding:8px 10px;font:inherit;min-width:120px;
+}
+input[type=text]:focus,select:focus,button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+#query{min-width:260px}
+.primary{
+  background:var(--accent);color:var(--accent-ink);border:none;
+  border-radius:var(--radius);padding:9px 18px;font:inherit;font-weight:600;cursor:pointer;
+}
+.primary:disabled{opacity:.5;cursor:default}
+#status{margin:12px 0;color:var(--muted);font-size:13px;min-height:1.4em}
+#status .count{color:var(--ink);font-weight:600}
+table.kwic{border-collapse:collapse;width:100%;font:13px/1.7 ui-monospace,Consolas,Menlo,monospace}
+table.kwic td{padding:1px 8px;white-space:nowrap;vertical-align:top}
+td.left{text-align:right;color:var(--muted);white-space:pre}
+td.node{text-align:center;color:var(--accent);font-weight:700;background:var(--hit);border-radius:3px}
+.sortkey{color:var(--bronze);font-weight:700}
+.eos{opacity:.35}
+td.right{text-align:left;color:var(--muted);white-space:pre}
+td.meta{color:var(--bronze);font-size:11px;cursor:pointer;user-select:none}
+tr.detail td{white-space:normal;font:14px/1.6 system-ui,sans-serif;background:var(--bg);
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 14px}
+tr.detail .fr{color:var(--muted);margin-top:6px}
+tr.detail .lbl{font-size:10px;letter-spacing:.1em;color:var(--bronze)}
+table.freq{border-collapse:collapse;width:100%;max-width:560px;font-size:14px}
+table.freq th{ text-align:left;border-bottom:2px solid var(--ink);padding:6px 8px;
+  font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+table.freq td{border-bottom:1px solid var(--line);padding:5px 8px}
+table.freq td.num{text-align:right;font-variant-numeric:tabular-nums}
+dl.stats{display:grid;grid-template-columns:auto 1fr;gap:6px 20px;max-width:560px}
+dl.stats dt{color:var(--muted)}
+dl.stats dd{margin:0;font-weight:600}
+.years{display:flex;gap:4px;flex-wrap:wrap;max-width:520px}
+.years button{
+  border:1px solid var(--line);background:var(--bg);color:var(--muted);
+  border-radius:3px;padding:2px 7px;font-size:12px;cursor:pointer;
+}
+.years button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.yearbox summary{cursor:pointer;font-size:13px;color:var(--muted);user-select:none;width:fit-content;
+  border:1px solid var(--line);border-radius:var(--radius);padding:5px 12px}
+.yearbox summary:hover{border-color:var(--accent)}
+.yearbox[open] summary{color:var(--ink)}
+#pager{display:flex;gap:10px;align-items:center;margin:10px 0;font-size:13px;color:var(--muted)}
+#pager button{border:1px solid var(--line);background:var(--panel);color:var(--ink);
+  border-radius:var(--radius);padding:3px 12px;cursor:pointer}
+#pager button:disabled{opacity:.4;cursor:default}
+.panelhead{margin:0 0 12px;font-size:13px;color:var(--muted)}
+.panelhead span[id]{color:var(--bronze);font-weight:700;font-family:ui-monospace,Consolas,Menlo,monospace}
+.panelhead span[id]:not(:empty)::after{content:" · "}
+.trend text{font:10px system-ui,sans-serif;fill:var(--muted)}
+.trend rect{fill:var(--accent)}
+.trend rect:hover{fill:var(--bronze)}
+table.coll{border-collapse:collapse;font-size:13px;min-width:420px}
+table.coll th{text-align:left;border-bottom:2px solid var(--ink);padding:4px 10px;
+  font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+table.coll td{border-bottom:1px solid var(--line);padding:3px 10px}
+table.coll td.num{text-align:right;font-variant-numeric:tabular-nums}
+footer{border-top:1px solid var(--line);color:var(--muted);font-size:12px;line-height:1.6;
+  padding:14px 22px 22px;margin-top:40px;overflow-wrap:break-word}
+footer p{margin:6px auto;max-width:1100px}
+.hidden{display:none !important}
+@media (prefers-reduced-motion:no-preference){
+  tr.detail td{animation:fade .15s ease-out}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+}
+.kwicwrap{overflow-x:auto}
+</style>
+</head>
+<body>
+<header>
+  <div class="wordmark" id="home" role="button" tabindex="0" title="secorpus">secorpus<span>.</span></div>
+  <div class="subtitle">Greek Stock Exchange Corpus · <span id="corpusname" data-i18n="loading">…</span></div>
+  <div class="spacer"></div>
+  <button class="iconbtn" id="langbtn" title="Ελληνικά / Français / English">EL</button>
+  <button class="iconbtn" id="themebtn" aria-label="theme">◐</button>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" aria-selected="true"  data-tab="search" data-i18n="tab_search">Αναζήτηση</button>
+  <button role="tab" aria-selected="false" data-tab="analysis" data-i18n="tab_analysis">Ανάλυση</button>
+  <button role="tab" aria-selected="false" data-tab="freq"   data-i18n="tab_freq">Συχνότητες</button>
+  <button role="tab" aria-selected="false" data-tab="stats"  data-i18n="tab_stats">Στατιστικά</button>
+</nav>
+
+<main>
+<section id="tab-search">
+  <div class="panel">
+    <div class="controls">
+      <div class="field">
+        <label for="query" data-i18n="lbl_query">Αναζήτηση</label>
+        <input type="text" id="query" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="field">
+        <label for="mode" data-i18n="lbl_mode">Τύπος</label>
+        <select id="mode">
+          <option value="lemma" selected data-i18n="mode_lemma">λήμμα</option>
+          <option value="word"  data-i18n="mode_word">λέξη</option>
+          <option value="regex" data-i18n="mode_regex">regex</option>
+        </select>
+      </div>
+      <button class="primary" id="searchbtn" data-i18n="btn_search">Αναζήτηση</button>
+      <button class="iconbtn" id="stopbtn" data-i18n="btn_stop">Διακοπή</button>
+      <button class="iconbtn" id="clearbtn" data-i18n="btn_clear">Καθαρισμός</button>
+      <div class="field">
+        <label for="sort" data-i18n="lbl_sort">Ταξινόμηση</label>
+        <select id="sort">
+          <option value="corpus" data-i18n="sort_corpus">χωρίς ταξινόμηση</option>
+          <option value="l" data-i18n="sort_1l">αριστερό συγκείμενο</option>
+          <option value="r" data-i18n="sort_1r">δεξί συγκείμενο</option>
+          <option value="n" data-i18n="sort_node">κόμβος</option>
+        </select>
+      </div>
+      <button class="iconbtn" id="exportbtn" data-i18n="btn_export">Εξαγωγή CSV</button>
+    </div>
+    <div class="controls" style="margin-top:12px">
+      <div class="field">
+        <label for="source" data-i18n="lbl_source">Πηγή</label>
+        <select id="source">
+          <option value="public" data-i18n="src_public">secorpus</option>
+          <option value="local" disabled data-i18n="src_local">τοπικά αρχεία</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="localfiles" data-i18n="lbl_local">Τοπικό υποσώμα</label>
+        <input type="file" id="localfiles" multiple accept=".jsonl,.gz">
+      </div>
+    </div>
+    <details class="yearbox" style="margin-top:12px">
+      <summary><span data-i18n="lbl_years">Έτη</span> · <span id="yearsum">—</span></summary>
+      <div class="years" id="years" style="margin-top:8px">
+        <button id="yrs_all" data-i18n="yrs_all" style="font-weight:600">Όλα</button>
+        <button id="yrs_none" data-i18n="yrs_none" style="font-weight:600">Κανένα</button>
+      </div>
+    </details>
+  </div>
+  <div id="status" role="status"></div>
+  <div id="pager" class="hidden">
+    <button id="pgprev">«</button><span id="pginfo"></span><button id="pgnext">»</button>
+  </div>
+
+  <div class="kwicwrap"><table class="kwic"><tbody id="results"></tbody></table></div>
+</section>
+
+<section id="tab-analysis" class="hidden">
+  <div class="panel">
+    <p class="panelhead"><span id="trendquery"></span><span data-i18n="pn_trend">Κατανομή ανά έτος</span></p>
+    <p id="trendempty" data-i18n="pn_empty" style="color:var(--muted)">Εκτελέστε πρώτα μια αναζήτηση.</p>
+    <div id="trend" class="trend"></div>
+  </div>
+  <div class="panel" style="margin-top:16px">
+    <p class="panelhead"><span id="collquery"></span><span data-i18n="pn_coll">Συνάψεις</span></p>
+    <p id="collempty" data-i18n="pn_empty" style="color:var(--muted)">Εκτελέστε πρώτα μια αναζήτηση.</p>
+    <table class="coll hidden" id="colltable"><thead><tr>
+      <th data-i18n="th_word">Λέξη</th><th data-i18n="th_joint">Συνεμφανίσεις</th>
+      <th data-i18n="th_mi">MI</th><th data-i18n="th_ld">logDice</th>
+    </tr></thead><tbody id="collbody"></tbody></table>
+  </div>
+</section>
+
+<section id="tab-freq" class="hidden">
+  <div class="panel controls">
+    <div class="field">
+      <label for="freqfilter" data-i18n="lbl_filter">Φίλτρο</label>
+      <input type="text" id="freqfilter" autocomplete="off">
+    </div>
+  </div>
+  <p id="freqinfo" style="color:var(--muted);font-size:13px"></p>
+  <table class="freq">
+    <thead><tr>
+      <th data-i18n="th_lemma">Λήμμα</th><th data-i18n="th_freq">Συχνότητα</th>
+      <th data-i18n="th_pm">Ανά εκατομμύριο</th>
+    </tr></thead>
+    <tbody id="freqbody"></tbody>
+  </table>
+</section>
+
+<section id="tab-stats" class="hidden">
+  <div class="panel"><dl class="stats" id="statsdl"></dl></div>
+</section>
+</main>
+
+<footer>
+  <p><strong>secorpus</strong><span data-i18n="foot_desc1"></span></p>
+  <p data-i18n="foot_desc2"></p>
+  <p><span data-i18n="foot_cite"></span> <a id="liclink" href="https://creativecommons.org/licenses/by-nc-nd/4.0/deed.el" target="_blank" rel="license noopener" data-i18n="foot_lic"></a><span data-i18n="foot_cite2"></span></p>
+</footer>
+
+<script>
+"use strict";
+/* ---------- Ρυθμίσεις ---------- */
+const DATA_PATH = "data/v1";
+const MAX_SHOWN = 2000;
+const PAGE_SIZE = 100;
+const KWIC_CHARS = 45; // χαρακτήρες συγκειμένου ανά πλευρά
+
+/* ---------- i18n ---------- */
+const I18N = {
+  el: {
+    loading:"φόρτωση…", tab_search:"Αναζήτηση", tab_freq:"Συχνότητες", tab_stats:"Στατιστικά",
+    lbl_query:"Αναζήτηση", lbl_mode:"Τύπος", lbl_years:"Έτη", lbl_filter:"Φίλτρο",
+    mode_word:"λέξη", mode_lemma:"λήμμα", mode_regex:"regex",
+    btn_search:"Αναζήτηση", btn_stop:"Διακοπή", btn_clear:"Καθαρισμός",
+    th_lemma:"Λήμμα", th_freq:"Συχνότητα", th_pm:"Ανά εκατομμύριο",
+    st_scanning:"Σάρωση", st_hits:"εμφανίσεις", st_docs:"έγγραφα", st_done:"Ολοκληρώθηκε",
+    st_shown:"εμφανίζονται οι πρώτες", st_none:"Καμία εμφάνιση.",
+    yrs_all:"Όλα", yrs_none:"Κανένα", yrs_undated:"χ.χ.", yrs_tip:"Κλικ για συμπερίληψη/εξαίρεση από τη σάρωση",
+    lbl_sort:"Ταξινόμηση", sort_corpus:"χωρίς ταξινόμηση", sort_1l:"αριστερό συγκείμενο", sort_1r:"δεξί συγκείμενο", sort_node:"κόμβος",
+    btn_export:"Εξαγωγή CSV", lbl_local:"Τοπικό υποσώμα", lbl_source:"Πηγή",
+    src_public:"secorpus", src_local:"τοπικά αρχεία", st_file:"αρχείο",
+    st_empty:"Δώστε όρο αναζήτησης.", st_badregex:"Μη έγκυρη κανονική έκφραση.",
+    st_nodata:"Δεν βρέθηκε το data/v1. Το εργαλείο πρέπει να σερβίρεται δίπλα στα δεδομένα (π.χ. python -m http.server).",
+    det_fr:"Γαλλικό σκέλος", det_none:"(χωρίς γαλλικό σκέλος)",
+    pn_trend:"Κατανομή ανά έτος (ανά εκατομμύριο λέξεις)", pn_coll:"Συνάψεις (παράθυρο ±5, ελάχ. 3 συνεμφανίσεις)", tab_analysis:"Ανάλυση", pn_empty:"Εκτελέστε πρώτα μια αναζήτηση.",
+    th_word:"Λέξη (λήμμα)", th_joint:"Συνεμφανίσεις", th_mi:"MI", th_ld:"logDice",
+    stats_docs:"Έγγραφα", stats_segs:"Τμήματα", stats_tokens:"Λέξεις (EL)",
+    stats_version:"Έκδοση", stats_sub:"Υποσώμα", stats_src:"Πηγή", stats_shards:"Shards",
+    freq_info:"Οι 200 πρώτες εγγραφές· χρησιμοποιήστε το φίλτρο για τις υπόλοιπες.",
+    foot_desc1:", πρωτότυπο επιπέδου 1. Εργαλείο διερεύνησης του Greek Stock Exchange Corpus, σώματος ενωσιακών κειμένων χρηματιστηριακού δικαίου (ελληνικά-γαλλικά). Δημιουργεί συμφραστικούς πίνακες (Keyword in Context, KWIC), επιτρέπει αναζήτηση λέξεων, λημμάτων και κανονικών εκφράσεων, ταξινόμηση ως προς το αριστερό ή δεξί συμφραζόμενο, κατανομή ανά έτος, επισκόπηση συχνών συμφράσεων σε καθορισμένο παράθυρο, πίνακα συχνοτήτων, εξαγωγή σε CSV και φόρτωση τοπικών υποσωμάτων.",
+    foot_desc2:"Το εργαλείο δεν αποτελεί πλήρες περιβάλλον διαχείρισης ή στατιστικής ανάλυσης σωμάτων κειμένων. Προορίζεται για ταχεία διερεύνηση κειμένων, διδακτική χρήση και αρχική τεκμηρίωση γλωσσικών παρατηρήσεων. Πηγές δεδομένων: DGT-TM (Ευρωπαϊκή Επιτροπή, απόφαση 2011/833/ΕΕ) και EUR-Lex.",
+    foot_cite:"«secorpus». Τζιάφα Ελένη, Εθνικό και Καποδιστριακό Πανεπιστήμιο Αθηνών, 2026. Διατίθεται με άδεια",
+    foot_lic:"Creative Commons Αναφορά Δημιουργού-Μη Εμπορική Χρήση-Όχι Παράγωγα Έργα 4.0 (CC BY-NC-ND 4.0)",
+    foot_cite2:". Ο σχεδιασμός και η υλοποίηση έγιναν σε συνεργασία με το Claude Fable 5.",
+  },
+  fr: {
+    loading:"chargement…", tab_search:"Recherche", tab_freq:"Fréquences", tab_stats:"Statistiques",
+    lbl_query:"Recherche", lbl_mode:"Type", lbl_years:"Années", lbl_filter:"Filtre",
+    mode_word:"mot", mode_lemma:"lemme", mode_regex:"regex",
+    btn_search:"Rechercher", btn_stop:"Arrêter", btn_clear:"Effacer",
+    th_lemma:"Lemme", th_freq:"Fréquence", th_pm:"Par million",
+    st_scanning:"Balayage", st_hits:"occurrences", st_docs:"documents", st_done:"Terminé",
+    st_shown:"affichage des premières", st_none:"Aucune occurrence.",
+    yrs_all:"Toutes", yrs_none:"Aucune", yrs_undated:"s.d.", yrs_tip:"Cliquer pour inclure/exclure du balayage",
+    lbl_sort:"Tri", sort_corpus:"sans tri", sort_1l:"contexte gauche", sort_1r:"contexte droit", sort_node:"pivot",
+    btn_export:"Exporter CSV", lbl_local:"Sous-corpus local", lbl_source:"Source",
+    src_public:"secorpus", src_local:"fichiers locaux", st_file:"fichier",
+    st_empty:"Saisissez un terme.", st_badregex:"Expression régulière invalide.",
+    st_nodata:"data/v1 introuvable. L'outil doit être servi à côté des données (p.ex. python -m http.server).",
+    det_fr:"Segment français", det_none:"(sans segment français)",
+    pn_trend:"Distribution par année (par million de mots)", pn_coll:"Collocations (fenêtre ±5, min. 3 cooccurrences)", tab_analysis:"Analyse", pn_empty:"Lancez d'abord une recherche.",
+    th_word:"Mot (lemme)", th_joint:"Cooccurrences", th_mi:"MI", th_ld:"logDice",
+    stats_docs:"Documents", stats_segs:"Segments", stats_tokens:"Mots (EL)",
+    stats_version:"Version", stats_sub:"Sous-corpus", stats_src:"Source", stats_shards:"Shards",
+    freq_info:"200 premières entrées ; utilisez le filtre pour le reste.",
+    foot_desc1:", prototype de niveau 1. Outil d'exploration du Greek Stock Exchange Corpus, corpus de textes institutionnels de l'UE en droit des marchés de capitaux (grec-français). Il produit des concordances (Keyword in Context, KWIC), permet la recherche de mots, de lemmes et d'expressions régulières, le tri par contexte gauche ou droit, la distribution par année, l'aperçu des collocations dans une fenêtre définie, une table de fréquences, l'export CSV et le chargement de sous-corpus locaux.",
+    foot_desc2:"L'outil ne constitue pas un environnement complet de gestion ou d'analyse statistique de corpus. Il est destiné à l'exploration rapide, à l'usage pédagogique et à la documentation initiale d'observations linguistiques. Sources des données : DGT-TM (Commission européenne, décision 2011/833/UE) et EUR-Lex.",
+    foot_cite:"« secorpus ». Eleni Tziafa, Université nationale et capodistrienne d'Athènes, 2026. Distribué sous licence",
+    foot_lic:"Creative Commons Attribution - Pas d'utilisation commerciale - Pas de modification 4.0 (CC BY-NC-ND 4.0)",
+    foot_cite2:". Conception et réalisation en collaboration avec Claude Fable 5.",
+  },
+  en: {
+    loading:"loading…", tab_search:"Search", tab_freq:"Frequencies", tab_stats:"Statistics",
+    lbl_query:"Search", lbl_mode:"Type", lbl_years:"Years", lbl_filter:"Filter",
+    mode_word:"word", mode_lemma:"lemma", mode_regex:"regex",
+    btn_search:"Search", btn_stop:"Stop", btn_clear:"Clear",
+    th_lemma:"Lemma", th_freq:"Frequency", th_pm:"Per million",
+    st_scanning:"Scanning", st_hits:"hits", st_docs:"documents", st_done:"Done",
+    st_shown:"showing first", st_none:"No hits.",
+    yrs_all:"All", yrs_none:"None", yrs_undated:"n.d.", yrs_tip:"Click to include/exclude from the scan",
+    lbl_sort:"Sort", sort_corpus:"unsorted", sort_1l:"left context", sort_1r:"right context", sort_node:"node",
+    btn_export:"Export CSV", lbl_local:"Local subcorpus", lbl_source:"Source",
+    src_public:"secorpus", src_local:"local files", st_file:"file",
+    st_empty:"Enter a search term.", st_badregex:"Invalid regular expression.",
+    st_nodata:"data/v1 not found. Serve the tool next to the data (e.g. python -m http.server).",
+    det_fr:"French segment", det_none:"(no French segment)",
+    pn_trend:"Distribution by year (per million words)", pn_coll:"Collocations (window ±5, min. 3 co-occurrences)", tab_analysis:"Analysis", pn_empty:"Run a search first.",
+    th_word:"Word (lemma)", th_joint:"Co-occurrences", th_mi:"MI", th_ld:"logDice",
+    stats_docs:"Documents", stats_segs:"Segments", stats_tokens:"Tokens (EL)",
+    stats_version:"Version", stats_sub:"Subcorpus", stats_src:"Source", stats_shards:"Shards",
+    freq_info:"First 200 entries; use the filter for the rest.",
+    foot_desc1:", level-1 prototype. A tool for exploring the Greek Stock Exchange Corpus, a corpus of EU institutional texts on capital-market law (Greek-French). It produces concordances (Keyword in Context, KWIC), supports word, lemma and regular-expression search, sorting by left or right context, distribution by year, collocation overview within a defined window, a frequency table, CSV export and loading of local subcorpora.",
+    foot_desc2:"The tool is not a full corpus-management or statistical-analysis environment. It is intended for quick text exploration, teaching and the initial documentation of linguistic observations. Data sources: DGT-TM (European Commission, Decision 2011/833/EU) and EUR-Lex.",
+    foot_cite:"\u201Csecorpus\u201D. Eleni Tziafa, National and Kapodistrian University of Athens, 2026. Released under the",
+    foot_lic:"Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 (CC BY-NC-ND 4.0) licence",
+    foot_cite2:". Designed and implemented in collaboration with Claude Fable 5.",
+  },
+};
+let LANG = "el";
+function T(key){ return (I18N[LANG] && I18N[LANG][key]) || I18N.el[key] || key; }
+
+/* ---------- Ταύτιση ---------- */
+function makeMatcher(mode, query){
+  const q = query.trim();
+  if (!q) return null;
+  if (mode === "regex"){
+    let re;
+    try { re = new RegExp(q, "iu"); }        // σημαία i, όχι πεζοποίηση του pattern
+    catch { return { error: "badregex" }; }
+    return { width:1, test:(toks,i)=> re.test(toks[i][0]) };
+  }
+  const needles = q.toLowerCase().split(/\s+/);
+  const col = mode === "lemma" ? 1 : 0;
+  return {
+    width: needles.length,
+    test: (toks, i) => {
+      if (i + needles.length > toks.length) return false;
+      for (let k = 0; k < needles.length; k++)
+        if (toks[i+k][col].toLowerCase() !== needles[k]) return false;
+      return true;
+    },
+  };
+}
+
+function findHits(row, matcher){
+  const toks = row.el_tok || [];
+  const hits = [];
+  for (let i = 0; i < toks.length; i++)
+    if (matcher.test(toks, i)) hits.push(i);
+  return hits;
+}
+
+function trimWordLeft(s, n){
+  if (s.length <= n) return s;
+  const c = s.slice(-n), sp = c.indexOf(" ");
+  return sp >= 0 ? c.slice(sp + 1) : c;
+}
+function trimWordRight(s, n){
+  if (s.length <= n) return s;
+  const c = s.slice(0, n), sp = c.lastIndexOf(" ");
+  return sp > 0 ? c.slice(0, sp) : c;
+}
+function kwicParts(toks, i, width){
+  const form = t => t[0];
+  const left  = toks.slice(0, i).map(form).join(" ");
+  const right = toks.slice(i + width).map(form).join(" ");
+  return {
+    left:  trimWordLeft(left, KWIC_CHARS).padStart(KWIC_CHARS, " "),
+    node:  toks.slice(i, i + width).map(form).join(" "),
+    right: trimWordRight(right, KWIC_CHARS).padEnd(KWIC_CHARS, " "),
+  };
+}
+function sortKeys(toks, i, width){
+  const f = t => t[0].toLowerCase();
+  return {
+    l: toks.slice(0, i).map(f).reverse().join(" "),   // 1L, 2L, …
+    r: toks.slice(i + width).map(f).join(" "),        // 1R, 2R, …
+    n: toks.slice(i, i + width).map(f).join(" "),
+  };
+}
+const COLL_WINDOW = 5, COLL_MIN = 3, SKIP_POS = new Set(["PUNCT","SYM","X","NUM"]);
+function collectCollocates(toks, i, width, counts){
+  const lo = Math.max(0, i - COLL_WINDOW), hi = Math.min(toks.length, i + width + COLL_WINDOW);
+  for (let k = lo; k < hi; k++){
+    if (k >= i && k < i + width) continue;
+    const [, lemma, pos] = toks[k];
+    if (SKIP_POS.has(pos)) continue;
+    const key = lemma.toLowerCase();
+    counts.set(key, (counts.get(key) || 0) + 1);
+  }
+}
+function collScores(counts, nodeFreq, N, freqMap, minJoint){
+  const out = [];
+  for (const [lemma, joint] of counts){
+    if (joint < minJoint) continue;
+    const collFreq = freqMap.get(lemma);
+    if (!collFreq) continue;
+    out.push({ lemma, joint,
+      mi: Math.log2(joint * N / (nodeFreq * collFreq)),
+      ld: 14 + Math.log2(2 * joint / (nodeFreq + collFreq)) });
+  }
+  out.sort((a, b) => b.ld - a.ld || b.joint - a.joint);
+  return out.slice(0, 30);
+}
+function trendData(yearHits, yearTokens){
+  return Object.keys(yearTokens).filter(y => y !== "0" && yearTokens[y] > 0).sort()
+    .map(y => ({ year: y, pm: (yearHits[y] || 0) * 1e6 / yearTokens[y], hits: yearHits[y] || 0 }));
+}
+function csvEscape(v){
+  v = String(v ?? "");
+  return /[";,\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+}
+function toCsv(results){
+  const head = ["celex","year","seg_id","left","node","right","segment_el","segment_fr"].join(";");
+  const body = results.map(x => [
+    x.row.celex, x.row.year ?? "", x.row.seg_id,
+    x.parts.left.trim(), x.parts.node, x.parts.right.trim(),
+    x.row.el, x.row.fr ?? "",
+  ].map(csvEscape).join(";"));
+  return "\ufeff" + head + "\n" + body.join("\n");
+}
+
+/* ---------- Ροή γραμμών από gzip/απλό stream ---------- */
+async function* lines(stream, gz){
+  const s = gz ? stream.pipeThrough(new DecompressionStream("gzip")) : stream;
+  const reader = s.pipeThrough(new TextDecoderStream()).getReader();
+  let buf = "";
+  for (;;){
+    const { value, done } = await reader.read();
+    if (done) break;
+    buf += value;
+    let nl;
+    while ((nl = buf.indexOf("\n")) >= 0){
+      const line = buf.slice(0, nl);
+      buf = buf.slice(nl + 1);
+      if (line.trim()) yield line;
+    }
+  }
+  if (buf.trim()) yield buf;
+}
+
+/* ---------- CSV συχνοτήτων ---------- */
+function parseFreqCsv(text){
+  const out = [];
+  for (const raw of text.split("\n").slice(1)){
+    const line = raw.replace(/\r$/, "");
+    if (!line) continue;
+    const [lemma, freq, pm] = line.split(",");
+    out.push([lemma, +freq, +pm]);
+  }
+  return out;
+}
+
+/* ---------- Εξαγόμενα για δοκιμές εκτός browser ---------- */
+if (typeof module !== "undefined") module.exports = { makeMatcher, findHits, kwicParts, trimWordLeft, trimWordRight, sortKeys, csvEscape, toCsv, lines, parseFreqCsv, collectCollocates, collScores, trendData, I18N };
+
+/* ---------- UI (μόνο σε browser) ---------- */
+if (typeof document !== "undefined"){
+
+const $ = id => document.getElementById(id);
+let MANIFEST = null;
+let ABORT = null;
+let RESULTS = [];
+let LOCAL = [];
+let PAGE = 0;
+
+function applyI18n(){
+  document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = T(el.dataset.i18n); });
+  $("langbtn").textContent = LANG.toUpperCase();
+  const lic = $("liclink");
+  if (lic) lic.href = "https://creativecommons.org/licenses/by-nc-nd/4.0/deed." + LANG;
+  localStorage.setItem("secorpus.lang", LANG);
+}
+function applyTheme(t){
+  document.documentElement.dataset.theme = t;
+  localStorage.setItem("secorpus.theme", t);
+}
+
+async function boot(){
+  LANG = localStorage.getItem("secorpus.lang") || "el";
+  applyTheme(localStorage.getItem("secorpus.theme") || "light");
+  applyI18n();
+
+  $("langbtn").onclick = () => { LANG = LANG === "el" ? "fr" : LANG === "fr" ? "en" : "el"; applyI18n(); renderStats(); };
+  $("themebtn").onclick = () => applyTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
+  document.querySelectorAll("nav.tabs button").forEach(b => b.onclick = () => showTab(b.dataset.tab));
+  $("searchbtn").onclick = runSearch;
+  $("sort").onchange = () => { PAGE = 0; renderResults(); };
+  $("exportbtn").onclick = exportCsv;
+  $("clearbtn").onclick = clearSearch;
+  $("home").onclick = resetAll;
+  $("home").onkeydown = e => { if (e.key === "Enter" || e.key === " ") resetAll(); };
+  $("pgprev").onclick = () => { PAGE--; renderResults(); };
+  $("pgnext").onclick = () => { PAGE++; renderResults(); };
+  $("localfiles").onchange = () => {
+    LOCAL = [...$("localfiles").files];
+    const opt = $("source").querySelector('option[value="local"]');
+    opt.disabled = LOCAL.length === 0;
+    if (LOCAL.length) $("source").value = "local";
+  };
+  $("stopbtn").onclick = () => ABORT && ABORT.abort();
+  $("query").addEventListener("keydown", e => { if (e.key === "Enter") runSearch(); });
+  $("freqfilter").addEventListener("input", renderFreq);
+
+  try {
+    MANIFEST = await (await fetch(`${DATA_PATH}/manifest.json`)).json();
+  } catch {
+    $("status").textContent = T("st_nodata");
+    $("corpusname").textContent = "—";
+    return;
+  }
+  $("corpusname").textContent = `${MANIFEST.corpus} · ${MANIFEST.subcorpus} · ${MANIFEST.version}`;
+  renderYears(); renderStats(); loadFreq();
+}
+
+function showTab(name){
+  document.querySelectorAll("nav.tabs button").forEach(b =>
+    b.setAttribute("aria-selected", String(b.dataset.tab === name)));
+  ["search","analysis","freq","stats"].forEach(t => $(`tab-${t}`).classList.toggle("hidden", t !== name));
+}
+
+function renderYears(){
+  const box = $("years");
+  box.querySelectorAll("button[data-file]").forEach(b => b.remove());
+  for (const sh of MANIFEST.shards){
+    const b = document.createElement("button");
+    b.textContent = sh.year || T("yrs_undated");
+    b.title = T("yrs_tip");
+    b.dataset.file = sh.file;
+    b.setAttribute("aria-pressed", "true");
+    b.onclick = () => { b.setAttribute("aria-pressed", String(b.getAttribute("aria-pressed") !== "true")); yearSummary(); };
+    box.appendChild(b);
+  }
+  const setAll = v => { box.querySelectorAll("button[data-file]").forEach(b => b.setAttribute("aria-pressed", String(v))); yearSummary(); };
+  $("yrs_all").onclick = () => setAll(true);
+  $("yrs_none").onclick = () => setAll(false);
+  yearSummary();
+}
+function yearSummary(){
+  const all = document.querySelectorAll("#years button[data-file]");
+  const on = document.querySelectorAll("#years button[data-file][aria-pressed='true']");
+  $("yearsum").textContent = on.length === all.length ? `${T("yrs_all")} (${all.length})` : `${on.length}/${all.length}`;
+}
+const selectedShards = () =>
+  [...document.querySelectorAll("#years button[aria-pressed='true']")].map(b => b.dataset.file);
+
+async function runSearch(){
+  const matcher = makeMatcher($("mode").value, $("query").value);
+  const status = $("status"), results = $("results");
+  results.innerHTML = "";
+  if (!matcher){ status.textContent = T("st_empty"); return; }
+  if (matcher.error){ status.textContent = T("st_badregex"); return; }
+
+  if (ABORT) ABORT.abort();
+  ABORT = new AbortController();
+  const signal = ABORT.signal;
+  $("searchbtn").disabled = true;
+
+  let total = 0, shown = 0;
+  RESULTS = []; PAGE = 0;
+  const docs = new Set();
+  const yearHits = {}, yearTokens = {}, collCounts = new Map();
+  const useLocal = $("source").value === "local" && LOCAL.length;
+  const sources = useLocal
+    ? LOCAL.map(f => ({ label: f.name, gz: f.name.endsWith(".gz"), open: () => Promise.resolve(f.stream()) }))
+    : selectedShards().map(name => ({ label: name, gz: name.endsWith(".gz"),
+        open: async () => { const r = await fetch(`${DATA_PATH}/${name}`, { signal }); return r.ok ? r.body : null; } }));
+  try {
+    for (let f = 0; f < sources.length; f++){
+      status.innerHTML = `${T("st_scanning")} ${f+1}/${sources.length} (${sources[f].label}) · ` +
+        `<span class="count">${total}</span> ${T("st_hits")} · ${docs.size} ${T("st_docs")}`;
+      let body;
+      try { body = await sources[f].open(); } catch { if (signal.aborted) throw new DOMException("","AbortError"); continue; }
+      if (!body) continue;
+      for await (const line of lines(body, sources[f].gz)){
+        if (signal.aborted) throw new DOMException("","AbortError");
+        let row; try { row = JSON.parse(line); } catch { continue; }
+        const y = String(row.year ?? 0);
+        yearTokens[y] = (yearTokens[y] || 0) + (row.el_tok ? row.el_tok.length : 0);
+        const hits = findHits(row, matcher);
+        if (!hits.length) continue;
+        total += hits.length; docs.add(row.celex);
+        yearHits[y] = (yearHits[y] || 0) + hits.length;
+        for (const i of hits) collectCollocates(row.el_tok, i, matcher.width, collCounts);
+        for (const i of hits){
+          if (shown >= MAX_SHOWN) break;
+          RESULTS.push({ row, parts: kwicParts(row.el_tok, i, matcher.width),
+                         keys: sortKeys(row.el_tok, i, matcher.width), ord: shown });
+          shown++;
+        }
+      }
+    }
+  } catch (e){ if (e.name !== "AbortError") throw e; }
+  renderResults();
+  const q = $("query").value.trim();
+  renderTrend(trendData(yearHits, yearTokens), total, q);
+  renderColl(collScores(collCounts, total, MANIFEST ? MANIFEST.tokens_el : 0, FREQMAP, COLL_MIN), q);
+  $("searchbtn").disabled = false;
+  status.innerHTML = total
+    ? `${T("st_done")}: <span class="count">${total}</span> ${T("st_hits")} · ${docs.size} ${T("st_docs")}` +
+      (total > shown ? ` · ${T("st_shown")} ${shown}` : "")
+    : T("st_none");
+}
+
+function renderResults(){
+  const key = $("sort").value;
+  const sorted = [...RESULTS];
+  if (key !== "corpus")
+    sorted.sort((a, b) => a.keys[key].localeCompare(b.keys[key], "el") || a.ord - b.ord);
+  const pages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  if (PAGE >= pages) PAGE = pages - 1;
+  const start = PAGE * PAGE_SIZE;
+  const slice = sorted.slice(start, start + PAGE_SIZE);
+  const tbody = $("results");
+  tbody.innerHTML = "";
+  for (const x of slice) tbody.appendChild(buildRow(x));
+  const pager = $("pager");
+  if (sorted.length > PAGE_SIZE){
+    pager.classList.remove("hidden");
+    $("pginfo").textContent = `${start + 1}–${start + slice.length} / ${sorted.length}`;
+    $("pgprev").disabled = PAGE === 0;
+    $("pgnext").disabled = PAGE >= pages - 1;
+  } else pager.classList.add("hidden");
+}
+function buildRow(x){
+  const key = $("sort").value;
+  const tr = document.createElement("tr");
+  tr.innerHTML = `<td class="meta"></td><td class="left"></td><td class="node"></td><td class="right"></td>`;
+  tr.children[0].textContent = `${x.row.celex} · ${x.row.year ?? "—"}`;
+  fillCtx(tr.children[1], x.parts.left, "left", key === "l");
+  tr.children[2].textContent = x.parts.node;
+  fillCtx(tr.children[3], x.parts.right, "right", key === "r");
+  tr.children[0].onclick = () => toggleDetail(tr, x.row);
+  return tr;
+}
+function fillCtx(td, text, side, mark){
+  td.textContent = "";
+  if (!text.trim()){                       // τέλος/αρχή τμήματος: αχνό ¶ αντί για κενό
+    if (side === "left") td.append(text.slice(0, -1));
+    const p = document.createElement("span");
+    p.className = "eos"; p.textContent = "¶";
+    td.append(p);
+    if (side === "right") td.append(text.slice(0, -1));
+    return;
+  }
+  if (!mark){ td.textContent = text; return; }
+  if (side === "left"){                    // επισήμανση 1L: τελευταία λέξη
+    const m = text.match(/^([\s\S]*\s)?(\S+)$/);
+    td.append(m[1] ?? "");
+    const k = document.createElement("span");
+    k.className = "sortkey"; k.textContent = m[2];
+    td.append(k);
+  } else {                                 // επισήμανση 1R: πρώτη λέξη
+    const m = text.match(/^(\S+)([\s\S]*)$/);
+    const k = document.createElement("span");
+    k.className = "sortkey"; k.textContent = m[1];
+    td.append(k, m[2] ?? "");
+  }
+}
+function clearSearch(){
+  if (ABORT) ABORT.abort();
+  $("query").value = "";
+  RESULTS = []; PAGE = 0;
+  $("results").innerHTML = "";
+  $("status").textContent = "";
+  $("pager").classList.add("hidden");
+  renderTrend([], 0, "");
+  renderColl([], "");
+  $("searchbtn").disabled = false;
+  $("query").focus();
+}
+function resetAll(){
+  clearSearch();
+  $("mode").value = "lemma";
+  $("sort").value = "corpus";
+  $("source").value = "public";
+  $("localfiles").value = "";
+  LOCAL = [];
+  const lo = $("source").querySelector('option[value="local"]');
+  if (lo) lo.disabled = true;
+  document.querySelectorAll("#years button[data-file]").forEach(b => b.setAttribute("aria-pressed", "true"));
+  if (MANIFEST) yearSummary();
+  const yb = document.querySelector(".yearbox"); if (yb) yb.open = false;
+  $("freqfilter").value = "";
+  if (FREQ.length) renderFreq();
+  showTab("search");
+}
+function renderTrend(data, total, q){
+  const host = $("trend");
+  $("trendquery").textContent = q || "";
+  if (!total || data.length < 2){
+    host.innerHTML = "";
+    $("trendempty").classList.remove("hidden");
+    return;
+  }
+  $("trendempty").classList.add("hidden");
+  const W = 700, H = 180, PAD = 30, bw = (W - 2 * PAD) / data.length;
+  const max = Math.max(...data.map(d => d.pm)) || 1;
+  const svg = [`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" width="100%">`];
+  svg.push(`<text x="2" y="12">${max.toFixed(1)}</text>`);
+  data.forEach((d, k) => {
+    const h = Math.max(1, (H - 45) * d.pm / max);
+    const x = PAD + k * bw;
+    svg.push(`<rect x="${(x + 1).toFixed(1)}" y="${(H - 30 - h).toFixed(1)}" width="${Math.max(1, bw - 2).toFixed(1)}" height="${h.toFixed(1)}">` +
+             `<title>${d.year}: ${d.pm.toFixed(1)} /εκατ. (${d.hits})</title></rect>`);
+    if (data.length <= 25 || k % 2 === 0)
+      svg.push(`<text x="${(x + bw / 2).toFixed(1)}" y="${H - 16}" text-anchor="middle">${d.year}</text>`);
+  });
+  svg.push("</svg>");
+  host.innerHTML = svg.join("");
+}
+function renderColl(rows, q){
+  const tbody = $("collbody");
+  $("collquery").textContent = q || "";
+  if (!rows.length){
+    tbody.innerHTML = "";
+    $("colltable").classList.add("hidden");
+    $("collempty").classList.remove("hidden");
+    return;
+  }
+  $("collempty").classList.add("hidden");
+  $("colltable").classList.remove("hidden");
+  tbody.innerHTML = rows.map(r =>
+    `<tr><td></td><td class="num">${r.joint}</td><td class="num">${r.mi.toFixed(2)}</td><td class="num">${r.ld.toFixed(2)}</td></tr>`).join("");
+  [...tbody.rows].forEach((tr, k) => tr.cells[0].textContent = rows[k].lemma);
+}
+function exportCsv(){
+  if (!RESULTS.length) return;
+  const blob = new Blob([toCsv(RESULTS)], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "secorpus_kwic.csv";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function toggleDetail(tr, row){
+  if (tr.nextSibling && tr.nextSibling.classList.contains("detail")){ tr.nextSibling.remove(); return; }
+  const d = document.createElement("tr");
+  d.className = "detail";
+  const td = document.createElement("td");
+  td.colSpan = 4;
+  const el = document.createElement("div"); el.textContent = row.el;
+  const fr = document.createElement("div"); fr.className = "fr";
+  fr.innerHTML = `<span class="lbl">${T("det_fr")}</span><br>`;
+  fr.append(row.fr ? row.fr : T("det_none"));
+  td.append(el, fr); d.appendChild(td);
+  tr.after(d);
+}
+
+/* ---------- Συχνότητες ---------- */
+let FREQ = [];
+let FREQMAP = new Map();
+async function loadFreq(){
+  try {
+    FREQ = parseFreqCsv(await (await fetch(`${DATA_PATH}/freq_el.csv`)).text());
+    FREQMAP = new Map(FREQ.map(r => [r[0], r[1]]));
+    renderFreq();
+  } catch { /* απουσία αρχείου: η καρτέλα μένει κενή */ }
+}
+function renderFreq(){
+  const filt = $("freqfilter").value.trim().toLowerCase();
+  const rows = (filt ? FREQ.filter(r => r[0].includes(filt)) : FREQ).slice(0, 200);
+  $("freqinfo").textContent = T("freq_info");
+  $("freqbody").innerHTML = rows.map(r =>
+    `<tr><td></td><td class="num">${r[1].toLocaleString()}</td><td class="num">${r[2]}</td></tr>`).join("");
+  [...$("freqbody").rows].forEach((tr, i) => tr.cells[0].textContent = rows[i][0]);
+}
+
+/* ---------- Στατιστικά ---------- */
+function renderStats(){
+  if (!MANIFEST) return;
+  const dl = $("statsdl");
+  const pairs = [
+    [T("stats_docs"), MANIFEST.documents?.toLocaleString()],
+    [T("stats_segs"), MANIFEST.segments?.toLocaleString()],
+    [T("stats_tokens"), MANIFEST.tokens_el?.toLocaleString()],
+    [T("stats_version"), MANIFEST.version],
+    [T("stats_sub"), MANIFEST.subcorpus],
+    [T("stats_src"), MANIFEST.source],
+    [T("stats_shards"), MANIFEST.shards?.length],
+  ];
+  dl.innerHTML = pairs.map(([k]) => `<dt></dt><dd></dd>`).join("");
+  const dts = dl.querySelectorAll("dt"), dds = dl.querySelectorAll("dd");
+  pairs.forEach(([k, v], i) => { dts[i].textContent = k; dds[i].textContent = v ?? "—"; });
+}
+
+boot();
+}
+</script>
+</body>
+</html>

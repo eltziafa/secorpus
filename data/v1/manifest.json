@@ -1,0 +1,121 @@
+{
+  "corpus": "secorpus",
+  "subcorpus": "eu-acquis",
+  "version": "v1",
+  "documents": 819,
+  "segments": 294750,
+  "tokens_el": 6651009,
+  "shards": [
+    {
+      "file": "shard-na.jsonl.gz",
+      "year": 0,
+      "segments": 312
+    },
+    {
+      "file": "shard-2001.jsonl.gz",
+      "year": 2001,
+      "segments": 46
+    },
+    {
+      "file": "shard-2002.jsonl.gz",
+      "year": 2002,
+      "segments": 640
+    },
+    {
+      "file": "shard-2003.jsonl.gz",
+      "year": 2003,
+      "segments": 1282
+    },
+    {
+      "file": "shard-2004.jsonl.gz",
+      "year": 2004,
+      "segments": 5908
+    },
+    {
+      "file": "shard-2005.jsonl.gz",
+      "year": 2005,
+      "segments": 1090
+    },
+    {
+      "file": "shard-2006.jsonl.gz",
+      "year": 2006,
+      "segments": 5248
+    },
+    {
+      "file": "shard-2007.jsonl.gz",
+      "year": 2007,
+      "segments": 6634
+    },
+    {
+      "file": "shard-2008.jsonl.gz",
+      "year": 2008,
+      "segments": 3835
+    },
+    {
+      "file": "shard-2009.jsonl.gz",
+      "year": 2009,
+      "segments": 8000
+    },
+    {
+      "file": "shard-2010.jsonl.gz",
+      "year": 2010,
+      "segments": 4779
+    },
+    {
+      "file": "shard-2011.jsonl.gz",
+      "year": 2011,
+      "segments": 6234
+    },
+    {
+      "file": "shard-2012.jsonl.gz",
+      "year": 2012,
+      "segments": 3872
+    },
+    {
+      "file": "shard-2013.jsonl.gz",
+      "year": 2013,
+      "segments": 22642
+    },
+    {
+      "file": "shard-2014.jsonl.gz",
+      "year": 2014,
+      "segments": 38226
+    },
+    {
+      "file": "shard-2015.jsonl.gz",
+      "year": 2015,
+      "segments": 26753
+    },
+    {
+      "file": "shard-2016.jsonl.gz",
+      "year": 2016,
+      "segments": 32492
+    },
+    {
+      "file": "shard-2017.jsonl.gz",
+      "year": 2017,
+      "segments": 41624
+    },
+    {
+      "file": "shard-2018.jsonl.gz",
+      "year": 2018,
+      "segments": 20399
+    },
+    {
+      "file": "shard-2019.jsonl.gz",
+      "year": 2019,
+      "segments": 20796
+    },
+    {
+      "file": "shard-2020.jsonl.gz",
+      "year": 2020,
+      "segments": 24297
+    },
+    {
+      "file": "shard-2021.jsonl.gz",
+      "year": 2021,
+      "segments": 19641
+    }
+  ],
+  "source": "DGT-TM (European Commission), reuse under Commission Decision 2011/833/EU"
+}
